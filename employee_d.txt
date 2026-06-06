@@ -1,0 +1,15 @@
+Automated repetitive deployment tasks.
+
+Developed scripts to reduce manual effort.
+
+Improved ticket triage workflows.
+
+Created operational runbooks.
+
+Documented troubleshooting procedures.
+
+Standardized escalation processes.
+
+Implemented monitoring improvements.
+
+Reduced incident response times through workflow enhancements.
