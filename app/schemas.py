@@ -47,6 +47,9 @@ class AnalysisResult(BaseModel):
     ai_insights: AIInsights
     performance_summary: str
     total_activities: int = Field(ge=0)
+    hidden_hero_score: float = Field(ge=0.0, le=100.0)
+    hidden_hero_classification: str
+    hidden_hero_analysis: str
 
 
 class AnalysisResponse(BaseModel):
@@ -64,6 +67,11 @@ class AnalysisResponse(BaseModel):
     top_impact_drivers: str
     ai_insights: Dict
     performance_summary: str
+    hidden_hero_score: Optional[float] = None
+    hidden_hero_classification: Optional[str] = None
+    hidden_hero_analysis: Optional[str] = None
+    number_of_files: Optional[int] = 1
+    filenames: Optional[list[str]] = None
     created_at: datetime
     
     class Config:
@@ -118,6 +126,58 @@ class ValidationConfidenceScore(BaseModel):
     approved_count: int = Field(description="Number of approved validations")
     rejected_count: int = Field(description="Number of rejected validations")
     pending_count: int = Field(description="Number of pending validations")
+
+# Team Comparison Schemas
+
+class EmployeeComparison(BaseModel):
+    """Schema for individual employee comparison data"""
+    filename: str = Field(description="Employee filename")
+    impact_score: int = Field(ge=0, le=100, description="Impact Score (0-100)")
+    recognition_gap_score: int = Field(ge=0, le=100, description="Recognition Gap Score (0-100)")
+    hidden_hero_score: float = Field(ge=0.0, le=100.0, description="Hidden Hero Score (0-100)")
+    hidden_hero_classification: str = Field(description="Hidden Hero classification")
+    burnout_risk: str = Field(description="Burnout risk level: Low, Moderate, or High")
+    invisible_work_score: float = Field(ge=0.0, le=1.0, description="Invisible Work Score (0-1)")
+    total_activities: int = Field(ge=0, description="Total activities analyzed")
+    category_breakdown: Dict[str, int] = Field(description="Activity breakdown by category")
+    leadership_indicators: Dict[str, str] = Field(description="Leadership qualities demonstrated")
+    top_strengths: list[str] = Field(description="Top 3 strength areas")
+
+
+class LeaderboardEntry(BaseModel):
+    """Schema for leaderboard entry"""
+    filename: str = Field(description="Employee filename")
+    score: float = Field(description="Score for this leaderboard")
+    label: str = Field(description="Display label for the score")
+
+
+class Leaderboards(BaseModel):
+    """Schema for all leaderboards"""
+    top_impact_contributors: list[LeaderboardEntry] = Field(description="Top impact contributors")
+    hidden_heroes: list[LeaderboardEntry] = Field(description="Hidden heroes ranked")
+    strongest_mentors: list[LeaderboardEntry] = Field(description="Strongest mentors")
+    best_collaborators: list[LeaderboardEntry] = Field(description="Best collaborators")
+    highest_burnout_risk: list[LeaderboardEntry] = Field(description="Highest burnout risk")
+    knowledge_sharing_champions: list[LeaderboardEntry] = Field(description="Knowledge sharing champions")
+
+
+class TeamSummary(BaseModel):
+    """Schema for team-level summary"""
+    total_employees: int = Field(description="Total employees analyzed")
+    average_impact_score: float = Field(description="Average impact score across team")
+    average_recognition_gap: float = Field(description="Average recognition gap across team")
+    hidden_heroes_count: int = Field(description="Number of hidden heroes")
+    burnout_risks_count: int = Field(description="Number of employees with high burnout risk")
+    top_team_strengths: list[str] = Field(description="Top strength areas across the team")
+
+
+class TeamComparisonResponse(BaseModel):
+    """Schema for team comparison API response"""
+    comparison_id: str = Field(description="Unique identifier for this comparison")
+    employees: list[EmployeeComparison] = Field(description="Individual employee results")
+    team_summary: TeamSummary = Field(description="Team-level aggregated metrics")
+    leaderboards: Leaderboards = Field(description="Ranked leaderboards")
+
 
 
 # Made with Bob

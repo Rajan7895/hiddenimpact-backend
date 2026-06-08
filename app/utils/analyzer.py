@@ -521,6 +521,115 @@ class InvisibleWorkAnalyzer:
         
         return ''.join(drivers)
     
+    def _calculate_hidden_hero_score(self, impact_score: int, recognition_gap_score: int) -> float:
+        """
+        Calculate Hidden Hero Score
+        Formula: (impact_score * 0.6) + (recognition_gap_score * 0.4)
+        """
+        return (impact_score * 0.6) + (recognition_gap_score * 0.4)
+    
+    def _get_hidden_hero_classification(self, score: float) -> str:
+        """
+        Classify Hidden Hero based on score
+        90-100: Elite Hidden Hero
+        80-89: Hidden Hero
+        70-79: Emerging Hidden Hero
+        Below 70: Not Classified
+        """
+        if score >= 90:
+            return "Elite Hidden Hero"
+        elif score >= 80:
+            return "Hidden Hero"
+        elif score >= 70:
+            return "Emerging Hidden Hero"
+        else:
+            return "Not Classified"
+    
+    def _generate_hidden_hero_analysis(self, score: float, classification: str,
+                                      impact_score: int, recognition_gap_score: int,
+                                      breakdown: CategoryBreakdown, total: int) -> str:
+        """Generate detailed Hidden Hero analysis"""
+        analysis = []
+        
+        # Header
+        analysis.append(f"Hidden Hero Score: {score:.1f}/100\n")
+        analysis.append(f"Classification: {classification}\n\n")
+        
+        # Classification-specific explanation
+        if classification == "Elite Hidden Hero":
+            analysis.append("🏆 ELITE HIDDEN HERO STATUS\n\n")
+            analysis.append("This employee represents the pinnacle of invisible work contribution. They consistently deliver exceptional organizational value while operating largely outside traditional recognition systems. Their work is both high-impact and systematically undervalued.\n\n")
+        elif classification == "Hidden Hero":
+            analysis.append("⭐ HIDDEN HERO STATUS\n\n")
+            analysis.append("This employee demonstrates strong hidden hero characteristics, consistently contributing high-value work that often goes unrecognized. Their efforts significantly impact team and organizational success beyond what traditional metrics capture.\n\n")
+        elif classification == "Emerging Hidden Hero":
+            analysis.append("🌟 EMERGING HIDDEN HERO STATUS\n\n")
+            analysis.append("This employee shows clear hidden hero potential, with growing contributions in high-impact invisible work areas. They are building a strong foundation of team-enabling activities that deserve greater recognition.\n\n")
+        else:
+            analysis.append("While this employee contributes valuable work, their current activity profile doesn't yet meet the threshold for Hidden Hero classification. There are opportunities to increase impact in invisible work categories.\n\n")
+        
+        # Score breakdown
+        analysis.append("Score Breakdown:\n")
+        analysis.append(f"• Impact Score: {impact_score}/100 (60% weight)\n")
+        analysis.append(f"  - Measures organizational value created\n")
+        analysis.append(f"• Recognition Gap: {recognition_gap_score}/100 (40% weight)\n")
+        analysis.append(f"  - Measures work likely invisible in traditional metrics\n\n")
+        
+        # Why they qualify (or don't)
+        if score >= 70:
+            analysis.append("Why This Employee Qualifies:\n\n")
+            
+            # High impact activities
+            high_impact_count = (breakdown.incident_support + breakdown.process_improvement +
+                               breakdown.mentoring + breakdown.cross_team_collaboration)
+            if high_impact_count > 0:
+                analysis.append(f"1. High-Impact Contributions ({high_impact_count} activities)\n")
+                if breakdown.mentoring > 0:
+                    analysis.append(f"   • Mentoring: {breakdown.mentoring} activities - Multiplying team capability\n")
+                if breakdown.incident_support > 0:
+                    analysis.append(f"   • Incident Support: {breakdown.incident_support} activities - Protecting system reliability\n")
+                if breakdown.process_improvement > 0:
+                    analysis.append(f"   • Process Improvement: {breakdown.process_improvement} activities - Driving efficiency\n")
+                if breakdown.cross_team_collaboration > 0:
+                    analysis.append(f"   • Cross-Team Collaboration: {breakdown.cross_team_collaboration} activities - Enabling organizational alignment\n")
+                analysis.append("\n")
+            
+            # Invisible work
+            invisible_count = (breakdown.mentoring + breakdown.knowledge_sharing +
+                             breakdown.cross_team_collaboration + breakdown.incident_support +
+                             breakdown.documentation)
+            if invisible_count > 0 and total > 0:
+                invisible_pct = (invisible_count / total) * 100
+                analysis.append(f"2. Significant Invisible Work ({invisible_pct:.0f}% of activities)\n")
+                analysis.append(f"   • {invisible_count} out of {total} activities fall into categories typically undervalued in performance reviews\n")
+                analysis.append(f"   • This work creates lasting organizational value but often goes unrecognized\n\n")
+            
+            # Impact on team
+            analysis.append("3. Team Enablement Focus\n")
+            analysis.append("   • Consistently prioritizes work that multiplies team effectiveness\n")
+            analysis.append("   • Demonstrates commitment to organizational health over individual visibility\n")
+            analysis.append("   • Creates value that compounds over time through knowledge transfer and capability building\n\n")
+            
+        else:
+            analysis.append("Opportunities for Growth:\n\n")
+            analysis.append("To achieve Hidden Hero status, consider:\n")
+            analysis.append("• Increasing involvement in high-impact invisible work (mentoring, cross-team collaboration)\n")
+            analysis.append("• Taking on more process improvement initiatives\n")
+            analysis.append("• Expanding knowledge sharing and documentation efforts\n")
+            analysis.append("• Seeking opportunities for incident response and system reliability work\n\n")
+        
+        # Recognition recommendations
+        if score >= 70:
+            analysis.append("Recognition Recommendations:\n\n")
+            analysis.append("Given this employee's Hidden Hero status, it's critical to:\n")
+            analysis.append("• Explicitly highlight invisible work contributions in performance reviews\n")
+            analysis.append("• Advocate for recognition systems that value team enablement\n")
+            analysis.append("• Share this analysis with leadership to ensure proper visibility\n")
+            analysis.append("• Consider for awards/recognition programs focused on team impact\n")
+            analysis.append("• Use as a model for other team members on high-impact contribution patterns\n")
+        
+        return ''.join(analysis)
+    
     def analyze(self, text: str) -> AnalysisResult:
         """
         Analyze text and return categorized results
@@ -587,6 +696,18 @@ class InvisibleWorkAnalyzer:
         insights_generator = AIInsightsGenerator()
         ai_insights = insights_generator.generate_insights(breakdown, total_activities)
         
+        # Calculate Hidden Hero Score
+        hidden_hero_score = self._calculate_hidden_hero_score(impact_score, recognition_gap_score)
+        hidden_hero_classification = self._get_hidden_hero_classification(hidden_hero_score)
+        hidden_hero_analysis = self._generate_hidden_hero_analysis(
+            hidden_hero_score,
+            hidden_hero_classification,
+            impact_score,
+            recognition_gap_score,
+            breakdown,
+            total_activities
+        )
+        
         return AnalysisResult(
             category_breakdown=breakdown,
             invisible_work_score=score,
@@ -594,7 +715,284 @@ class InvisibleWorkAnalyzer:
             impact_analysis=impact_analysis,
             ai_insights=ai_insights,
             performance_summary=summary,
-            total_activities=total_activities
+            total_activities=total_activities,
+            hidden_hero_score=hidden_hero_score,
+            hidden_hero_classification=hidden_hero_classification,
+            hidden_hero_analysis=hidden_hero_analysis
         )
+    
+    def _calculate_burnout_risk(self, breakdown: CategoryBreakdown, total_activities: int) -> str:
+        """
+        Calculate burnout risk level based on activity patterns
+        Returns: "Low", "Moderate", or "High"
+        """
+        if total_activities == 0:
+            return "Low"
+        
+        # High-stress categories
+        incident_pct = (breakdown.incident_support / total_activities) * 100
+        meeting_pct = (breakdown.meetings / total_activities) * 100
+        admin_pct = (breakdown.administrative_work / total_activities) * 100
+        
+        # Calculate stress score
+        stress_score = 0
+        
+        # Incident support is high stress
+        if incident_pct > 30:
+            stress_score += 3
+        elif incident_pct > 20:
+            stress_score += 2
+        elif incident_pct > 10:
+            stress_score += 1
+        
+        # Too many meetings
+        if meeting_pct > 40:
+            stress_score += 3
+        elif meeting_pct > 30:
+            stress_score += 2
+        elif meeting_pct > 20:
+            stress_score += 1
+        
+        # High administrative burden
+        if admin_pct > 25:
+            stress_score += 2
+        elif admin_pct > 15:
+            stress_score += 1
+        
+        # Total workload
+        if total_activities > 50:
+            stress_score += 2
+        elif total_activities > 30:
+            stress_score += 1
+        
+        # Determine risk level
+        if stress_score >= 6:
+            return "High"
+        elif stress_score >= 3:
+            return "Moderate"
+        else:
+            return "Low"
+    
+    def _get_top_strengths(self, breakdown: CategoryBreakdown) -> List[str]:
+        """Get top 3 strength areas based on activity counts"""
+        categories = [
+            ("Mentoring", breakdown.mentoring),
+            ("Knowledge Sharing", breakdown.knowledge_sharing),
+            ("Documentation", breakdown.documentation),
+            ("Incident Support", breakdown.incident_support),
+            ("Meetings", breakdown.meetings),
+            ("Cross-Team Collaboration", breakdown.cross_team_collaboration),
+            ("Process Improvement", breakdown.process_improvement),
+            ("Administrative Work", breakdown.administrative_work)
+        ]
+        
+        # Sort by count descending
+        sorted_categories = sorted(categories, key=lambda x: x[1], reverse=True)
+        
+        # Return top 3 with non-zero counts
+        return [name for name, count in sorted_categories[:3] if count > 0]
+    
+    def analyze_for_comparison(self, text: str, filename: str) -> Dict:
+        """
+        Lightweight analysis for team comparison
+        Returns key metrics without full analysis text
+        """
+        # Preprocess and extract activities
+        processed_text = self._preprocess_text(text)
+        activities = self._extract_activities(processed_text)
+        
+        # Initialize category counts
+        category_counts = {
+            'mentoring': 0,
+            'knowledge_sharing': 0,
+            'documentation': 0,
+            'incident_support': 0,
+            'meetings': 0,
+            'cross_team_collaboration': 0,
+            'process_improvement': 0,
+            'administrative_work': 0
+        }
+        
+        # Classify each activity
+        for activity in activities:
+            category = self._classify_activity(activity)
+            if category:
+                category_counts[category] += 1
+        
+        # Create breakdown
+        breakdown = CategoryBreakdown(**category_counts)
+        total_activities = len(activities)
+        
+        # Calculate scores
+        invisible_work_score = self._calculate_invisible_work_score(breakdown, total_activities)
+        recognition_gap_score = self._calculate_recognition_gap_score(breakdown, total_activities)
+        impact_score = self._calculate_impact_score(breakdown, total_activities)
+        hidden_hero_score = self._calculate_hidden_hero_score(impact_score, recognition_gap_score)
+        hidden_hero_classification = self._get_hidden_hero_classification(hidden_hero_score)
+        burnout_risk = self._calculate_burnout_risk(breakdown, total_activities)
+        
+        # Get leadership indicators from AI insights
+        insights_generator = AIInsightsGenerator()
+        ai_insights = insights_generator.generate_insights(breakdown, total_activities)
+        
+        # Get top strengths
+        top_strengths = self._get_top_strengths(breakdown)
+        
+        return {
+            "filename": filename,
+            "impact_score": impact_score,
+            "recognition_gap_score": recognition_gap_score,
+            "hidden_hero_score": hidden_hero_score,
+            "hidden_hero_classification": hidden_hero_classification,
+            "burnout_risk": burnout_risk,
+            "invisible_work_score": invisible_work_score,
+            "total_activities": total_activities,
+            "category_breakdown": category_counts,
+            "leadership_indicators": ai_insights.leadership_indicators,
+            "top_strengths": top_strengths
+        }
+    
+    def calculate_team_summary(self, employees: List[Dict]) -> Dict:
+        """Calculate team-level aggregated metrics"""
+        if not employees:
+            return {
+                "total_employees": 0,
+                "average_impact_score": 0.0,
+                "average_recognition_gap": 0.0,
+                "hidden_heroes_count": 0,
+                "burnout_risks_count": 0,
+                "top_team_strengths": []
+            }
+        
+        total_employees = len(employees)
+        
+        # Calculate averages
+        avg_impact = sum(e["impact_score"] for e in employees) / total_employees
+        avg_recognition_gap = sum(e["recognition_gap_score"] for e in employees) / total_employees
+        
+        # Count hidden heroes (score >= 70)
+        hidden_heroes_count = sum(1 for e in employees if e["hidden_hero_score"] >= 70)
+        
+        # Count high burnout risks
+        burnout_risks_count = sum(1 for e in employees if e["burnout_risk"] == "High")
+        
+        # Aggregate top team strengths
+        strength_counts = {}
+        for employee in employees:
+            for strength in employee["top_strengths"]:
+                strength_counts[strength] = strength_counts.get(strength, 0) + 1
+        
+        # Get top 5 team strengths
+        top_team_strengths = sorted(strength_counts.items(), key=lambda x: x[1], reverse=True)[:5]
+        top_team_strengths = [strength for strength, _ in top_team_strengths]
+        
+        return {
+            "total_employees": total_employees,
+            "average_impact_score": round(avg_impact, 1),
+            "average_recognition_gap": round(avg_recognition_gap, 1),
+            "hidden_heroes_count": hidden_heroes_count,
+            "burnout_risks_count": burnout_risks_count,
+            "top_team_strengths": top_team_strengths
+        }
+    
+    def generate_leaderboards(self, employees: List[Dict]) -> Dict:
+        """Generate ranked leaderboards for various metrics"""
+        
+        # Top Impact Contributors
+        top_impact = sorted(employees, key=lambda x: x["impact_score"], reverse=True)[:5]
+        top_impact_entries = [
+            {
+                "filename": e["filename"],
+                "score": float(e["impact_score"]),
+                "label": f"{e['impact_score']}/100"
+            }
+            for e in top_impact
+        ]
+        
+        # Hidden Heroes (by hidden hero score)
+        hidden_heroes = sorted(
+            [e for e in employees if e["hidden_hero_score"] >= 70],
+            key=lambda x: x["hidden_hero_score"],
+            reverse=True
+        )[:5]
+        hidden_heroes_entries = [
+            {
+                "filename": e["filename"],
+                "score": float(e["hidden_hero_score"]),
+                "label": f"{e['hidden_hero_classification']} ({e['hidden_hero_score']:.1f})"
+            }
+            for e in hidden_heroes
+        ]
+        
+        # Strongest Mentors (by mentoring count)
+        strongest_mentors = sorted(
+            employees,
+            key=lambda x: x["category_breakdown"]["mentoring"],
+            reverse=True
+        )[:5]
+        strongest_mentors_entries = [
+            {
+                "filename": e["filename"],
+                "score": float(e["category_breakdown"]["mentoring"]),
+                "label": f"{e['category_breakdown']['mentoring']} activities"
+            }
+            for e in strongest_mentors if e["category_breakdown"]["mentoring"] > 0
+        ]
+        
+        # Best Collaborators (by cross-team collaboration)
+        best_collaborators = sorted(
+            employees,
+            key=lambda x: x["category_breakdown"]["cross_team_collaboration"],
+            reverse=True
+        )[:5]
+        best_collaborators_entries = [
+            {
+                "filename": e["filename"],
+                "score": float(e["category_breakdown"]["cross_team_collaboration"]),
+                "label": f"{e['category_breakdown']['cross_team_collaboration']} activities"
+            }
+            for e in best_collaborators if e["category_breakdown"]["cross_team_collaboration"] > 0
+        ]
+        
+        # Highest Burnout Risk
+        burnout_risk_map = {"High": 3, "Moderate": 2, "Low": 1}
+        highest_burnout = sorted(
+            employees,
+            key=lambda x: (burnout_risk_map[x["burnout_risk"]], x["total_activities"]),
+            reverse=True
+        )[:5]
+        highest_burnout_entries = [
+            {
+                "filename": e["filename"],
+                "score": float(burnout_risk_map[e["burnout_risk"]]),
+                "label": f"{e['burnout_risk']} Risk ({e['total_activities']} activities)"
+            }
+            for e in highest_burnout
+        ]
+        
+        # Knowledge Sharing Champions
+        knowledge_champions = sorted(
+            employees,
+            key=lambda x: x["category_breakdown"]["knowledge_sharing"],
+            reverse=True
+        )[:5]
+        knowledge_champions_entries = [
+            {
+                "filename": e["filename"],
+                "score": float(e["category_breakdown"]["knowledge_sharing"]),
+                "label": f"{e['category_breakdown']['knowledge_sharing']} activities"
+            }
+            for e in knowledge_champions if e["category_breakdown"]["knowledge_sharing"] > 0
+        ]
+        
+        return {
+            "top_impact_contributors": top_impact_entries,
+            "hidden_heroes": hidden_heroes_entries,
+            "strongest_mentors": strongest_mentors_entries,
+            "best_collaborators": best_collaborators_entries,
+            "highest_burnout_risk": highest_burnout_entries,
+            "knowledge_sharing_champions": knowledge_champions_entries
+        }
+
 
 # Made with Bob

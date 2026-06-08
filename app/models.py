@@ -15,7 +15,9 @@ class Analysis(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    filename = Column(String, nullable=False)
+    filename = Column(String, nullable=False)  # Primary filename or combined name
+    filenames = Column(JSON, nullable=True)  # Array of all filenames for multi-file uploads
+    number_of_files = Column(Integer, default=1)  # Number of files in this analysis
     file_type = Column(String, nullable=False)
     content = Column(Text, nullable=True)
     category_breakdown = Column(JSON, nullable=True)
@@ -48,6 +50,11 @@ class Analysis(Base):
     
     # Performance Summary
     performance_summary = Column(Text, nullable=True)
+    
+    # Hidden Hero Analysis
+    hidden_hero_score = Column(Float, nullable=True)
+    hidden_hero_classification = Column(String, nullable=True)
+    hidden_hero_analysis = Column(Text, nullable=True)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
